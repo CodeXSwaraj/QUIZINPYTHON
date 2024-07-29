@@ -71,30 +71,30 @@ class QuizApp:
 
     def create_widgets(self):
         # Question label
-        self.question_label = tk.Label(self.master, text="", font=('Arial', 16), wraplength=500, justify="center")
+        self.question_label = tk.Label(self.master, text="", font=('Arial', 16, 'bold'), wraplength=500, justify="center", bg="#f0f0f0")
         self.question_label.pack(pady=20)
         
         # Options (Radio buttons)
         self.var = tk.StringVar()
         self.option_buttons = []
         for _ in range(4):
-            btn = tk.Radiobutton(self.master, text="", variable=self.var, value="", font=('Arial', 14), anchor='w', padx=10)
+            btn = tk.Radiobutton(self.master, text="", variable=self.var, value="", font=('Arial', 14), anchor='w', padx=10, bg="#e1e1e1")
             btn.pack(fill='x', padx=20, pady=5)
             self.option_buttons.append(btn)
         
         # Submit button
-        self.submit_button = tk.Button(self.master, text="Submit", command=self.submit_answer, font=('Arial', 14))
+        self.submit_button = tk.Button(self.master, text="Submit", command=self.submit_answer, font=('Arial', 14), bg="#4caf50", fg="white")
         self.submit_button.pack(pady=20)
         
         # Progress bar
-        self.progress_label = tk.Label(self.master, text=f"Question 1/{len(self.questions)}", font=('Arial', 12))
+        self.progress_label = tk.Label(self.master, text=f"Question 1/{len(self.questions)}", font=('Arial', 12), bg="#f0f0f0")
         self.progress_label.pack(side='bottom', pady=10)
 
     def display_question(self):
         question_data = self.questions[self.question_index]
         self.question_label.config(text=question_data["question"])
         for i, option in enumerate(question_data["options"]):
-            self.option_buttons[i].config(text=option, value=option)
+            self.option_buttons[i].config(text=option, value=option, bg="#e1e1e1")
         self.var.set(None)
         self.update_progress()
 
@@ -109,6 +109,11 @@ class QuizApp:
             correct_answer = self.questions[self.question_index]["answer"]
             if selected_option == correct_answer:
                 self.score += 1
+                messagebox.showinfo("Correct!", "That's the correct answer!", icon='info')
+                self.question_label.config(bg="#dff0d8")
+            else:
+                messagebox.showerror("Incorrect", f"Wrong answer. The correct answer was {correct_answer}.")
+                self.question_label.config(bg="#f8d7da")
             
             self.question_index += 1
             if self.question_index < len(self.questions):
