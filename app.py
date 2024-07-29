@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
+import requests
 
 class QuizApp:
     def __init__(self, master):
@@ -10,65 +11,37 @@ class QuizApp:
         
         self.score = 0
         self.question_index = 0
+        self.questions = []
         
-        # Questions data
-        self.questions = [
-            {
-                "question": "What is the capital of France?", 
-                "options": ["Berlin", "Paris", "Madrid", "Rome"], 
-                "answer": "Paris"
-            },
-            {
-                "question": "What is 5 + 7?", 
-                "options": ["10", "11", "12", "13"], 
-                "answer": "12"
-            },
-            {
-                "question": "What is the color of the sky?", 
-                "options": ["Blue", "Green", "Red", "Yellow"], 
-                "answer": "Blue"
-            },
-            {
-                "question": "Which planet is known as the Red Planet?", 
-                "options": ["Earth", "Mars", "Jupiter", "Saturn"], 
-                "answer": "Mars"
-            },
-            {
-                "question": "Who wrote 'Hamlet'?", 
-                "options": ["Charles Dickens", "Jane Austen", "William Shakespeare", "Mark Twain"], 
-                "answer": "William Shakespeare"
-            },
-            {
-                "question": "What is the largest mammal?", 
-                "options": ["Elephant", "Blue Whale", "Giraffe", "Hippopotamus"], 
-                "answer": "Blue Whale"
-            },
-            {
-                "question": "Which element has the chemical symbol 'O'?", 
-                "options": ["Gold", "Oxygen", "Osmium", "Zinc"], 
-                "answer": "Oxygen"
-            },
-            {
-                "question": "In which year did the Titanic sink?", 
-                "options": ["1912", "1905", "1915", "1920"], 
-                "answer": "1912"
-            },
-            {
-                "question": "What is the smallest prime number?", 
-                "options": ["0", "1", "2", "3"], 
-                "answer": "2"
-            },
-            {
-                "question": "Which country is known as the Land of the Rising Sun?", 
-                "options": ["China", "South Korea", "Japan", "Vietnam"], 
-                "answer": "Japan"
-            }
-        ]
+        # Fetch questions from API
+        self.fetch_questions()
         
         # Creating widgets
         self.create_widgets()
-        self.display_question()
+        
+        if self.questions:
+            self.display_question()
 
+    def fetch_questions(self):
+        try:
+            response = requests.get("https://opentdb.com/api.php?amount=10&type=multiple")
+            data = response.json()
+            if data["response_code"] == 0:
+                for item in data["results"]:
+                    question = {
+                        "question": item["question"],
+                        "options": item["incorrect_answers"] + [item["correct_answer"]],
+                        "answer": item["correct_answer"]
+                    }
+                    # Shuffle the options to randomize their order
+                    import random
+                    random.shuffle(question["options"])
+                    self.questions.append(question)
+            else:
+                messagebox.showerror("Error", "Could not fetch questions. Please try again.")
+        except Exception as e:
+            messagebox.showerror("Error", f"An error occurred: {e}")
+    
     def create_widgets(self):
         # Question label
         self.question_label = tk.Label(self.master, text="", font=('Arial', 16, 'bold'), wraplength=500, justify="center", bg="#f0f0f0")
