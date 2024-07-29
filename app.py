@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 import requests
+import html
 
 class QuizApp:
     def __init__(self, master):
@@ -29,9 +30,9 @@ class QuizApp:
             if data["response_code"] == 0:
                 for item in data["results"]:
                     question = {
-                        "question": item["question"],
-                        "options": item["incorrect_answers"] + [item["correct_answer"]],
-                        "answer": item["correct_answer"]
+                        "question": html.unescape(item["question"]),
+                        "options": [html.unescape(opt) for opt in item["incorrect_answers"]] + [html.unescape(item["correct_answer"])],
+                        "answer": html.unescape(item["correct_answer"])
                     }
                     # Shuffle the options to randomize their order
                     import random
