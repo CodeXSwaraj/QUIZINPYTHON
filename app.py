@@ -15,38 +15,47 @@ class QuizApp:
         self.score = 0
         self.question_index = 0
         self.questions = []
-        self.categories = [{'id': 999, 'name': 'India'}]  # Adding custom India category
-        self.time_left = 15  # seconds for each question
+        self.categories = [{'id': 999, 'name': 'India'}]
+        self.time_left = 15
         self.timer = None
+        self.difficulty = 'easy'
+        self.high_scores = []
 
-        # Fetch categories from API and add custom category
         self.fetch_categories()
-        
-        # Creating widgets for category selection
         self.create_category_widgets()
         
     def fetch_categories(self):
         try:
             response = requests.get("https://opentdb.com/api_category.php")
             data = response.json()
-            self.categories.extend(data["trivia_categories"])  # Append existing categories
+            self.categories.extend(data["trivia_categories"])
         except Exception as e:
             messagebox.showerror("Error", f"An error occurred while fetching categories: {e}")
     
     def create_category_widgets(self):
         self.category_label = tk.Label(self.master, text="Select a Category", font=('Arial', 16, 'bold'), fg="#ecf0f1", bg="#2c3e50")
-        self.category_label.pack(pady=20)
+        self.category_label.pack(pady=10)
         
         self.category_var = tk.StringVar()
         self.category_dropdown = ttk.Combobox(self.master, textvariable=self.category_var, font=('Arial', 14))
         self.category_dropdown['values'] = [category['name'] for category in self.categories]
-        self.category_dropdown.current(0)  # set the selected item
+        self.category_dropdown.current(0)
         self.category_dropdown.pack(pady=10)
+        
+        self.difficulty_label = tk.Label(self.master, text="Select Difficulty", font=('Arial', 16, 'bold'), fg="#ecf0f1", bg="#2c3e50")
+        self.difficulty_label.pack(pady=10)
+        
+        self.difficulty_var = tk.StringVar()
+        self.difficulty_dropdown = ttk.Combobox(self.master, textvariable=self.difficulty_var, font=('Arial', 14))
+        self.difficulty_dropdown['values'] = ['easy', 'medium', 'hard']
+        self.difficulty_dropdown.current(0)
+        self.difficulty_dropdown.pack(pady=10)
         
         self.start_button = tk.Button(self.master, text="Start Quiz", command=self.start_quiz, font=('Arial', 14, 'bold'), bg="#27ae60", fg="white", cursor="hand2", activebackground="#2ecc71")
         self.start_button.pack(pady=20)
     
     def start_quiz(self):
+        self.difficulty = self.difficulty_var.get()
         selected_category = self.category_var.get()
         if selected_category == 'India':
             self.load_india_questions()
@@ -59,7 +68,7 @@ class QuizApp:
     
     def fetch_questions(self, category_id):
         try:
-            response = requests.get(f"https://opentdb.com/api.php?amount=10&category={category_id}&type=multiple")
+            response = requests.get(f"https://opentdb.com/api.php?amount=10&category={category_id}&difficulty={self.difficulty}&type=multiple")
             data = response.json()
             if data["response_code"] == 0:
                 for item in data["results"]:
@@ -73,6 +82,8 @@ class QuizApp:
                 
                 self.category_label.pack_forget()
                 self.category_dropdown.pack_forget()
+                self.difficulty_label.pack_forget()
+                self.difficulty_dropdown.pack_forget()
                 self.start_button.pack_forget()
                 self.create_widgets()
                 self.display_question()
@@ -82,7 +93,6 @@ class QuizApp:
             messagebox.showerror("Error", f"An error occurred while fetching questions: {e}")
     
     def load_india_questions(self):
-        # Pool of India-specific questions
         india_questions = [
             {
                 "question": "What is the capital of India?",
@@ -136,9 +146,11 @@ class QuizApp:
             }
         ]
         
-        self.questions = random.sample(india_questions, 5)  # Select a random subset of questions
+        self.questions = random.sample(india_questions, 5)
         self.category_label.pack_forget()
         self.category_dropdown.pack_forget()
+        self.difficulty_label.pack_forget()
+        self.difficulty_dropdown.pack_forget()
         self.start_button.pack_forget()
         self.create_widgets()
         self.display_question()
@@ -160,27 +172,24 @@ class QuizApp:
         self.submit_button = tk.Button(self.master, text="Submit", command=self.submit_answer, font=('Arial', 14, 'bold'), bg="#e74c3c", fg="white", cursor="hand2", activebackground="#c0392b")
         self.submit_button.pack(pady=20)
         
-        self.progress_label = tk.Label(self.master, text=f"Question 1/{len(self.questions)}", font=('Arial', 12, 'bold'), bg="#34495e", fg="#ecf0f1")
-        self.progress_label.pack(side='bottom', pady=10)
-
+        self.progress_label = tk.Label(self.master, text="", font=('Arial', 12, 'bold'), bg="#34495e", fg="#ecf0f1")
+        self.progress_label.pack(pady=10)
+    
     def display_question(self):
-        if self.timer:
-            self.master.after_cancel(self.timer)
-        
         self.time_left = 15
         self.update_timer()
+        self.update_progress()
         
         question_data = self.questions[self.question_index]
-        self.question_label.config(text=question_data["question"], bg="#34495e")
+        self.question_label.config(text=question_data["question"])
         for i, option in enumerate(question_data["options"]):
-            self.option_buttons[i].config(text=option, value=option, bg="#34495e", state=tk.NORMAL)
+            self.option_buttons[i].config(text=option, value=option)
         self.var.set(None)
-        self.update_progress()
     
     def update_timer(self):
         if self.time_left > 0:
-            self.timer_label.config(text=f"Time left: {self.time_left} seconds")
             self.time_left -= 1
+            self.timer_label.config(text=f"Time left: {self.time_left} seconds")
             self.timer = self.master.after(1000, self.update_timer)
         else:
             self.submit_answer(auto_submit=True)
@@ -201,12 +210,39 @@ class QuizApp:
             else:
                 if self.timer:
                     self.master.after_cancel(self.timer)
-                messagebox.showinfo("Quiz Completed", f"Your score is {self.score}/{len(self.questions)}")
-                self.master.quit()
+                self.show_review()
         else:
             messagebox.showwarning("Warning", "Please select an option.")
+    
+    def show_review(self):
+        review_window = tk.Toplevel(self.master)
+        review_window.title("Review Answers")
+        review_window.geometry("600x400")
+        review_window.config(bg="#2c3e50")
+        
+        tk.Label(review_window, text="Review Your Answers", font=('Arial', 16, 'bold'), bg="#2c3e50", fg="#ecf0f1").pack(pady=20)
+        
+        for i, question in enumerate(self.questions):
+            frame = tk.Frame(review_window, bg="#34495e", pady=10)
+            frame.pack(fill="x", padx=10)
+            
+            question_label = tk.Label(frame, text=f"Q{i+1}: {question['question']}", font=('Arial', 12, 'bold'), wraplength=550, justify="left", bg="#34495e", fg="#ecf0f1")
+            question_label.pack(anchor='w')
+            
+            correct_answer_label = tk.Label(frame, text=f"Correct Answer: {question['answer']}", font=('Arial', 12), bg="#34495e", fg="#2ecc71")
+            correct_answer_label.pack(anchor='w', padx=20)
+            
+            selected_answer = self.var.get()
+            if selected_answer == question["answer"]:
+                selected_answer_label = tk.Label(frame, text=f"Your Answer: {selected_answer} (Correct)", font=('Arial', 12), bg="#34495e", fg="#2ecc71")
+            else:
+                selected_answer_label = tk.Label(frame, text=f"Your Answer: {selected_answer} (Wrong)", font=('Arial', 12), bg="#34495e", fg="#e74c3c")
+            selected_answer_label.pack(anchor='w', padx=20)
+        
+        tk.Button(review_window, text="Close", command=review_window.destroy, font=('Arial', 14, 'bold'), bg="#e74c3c", fg="white", cursor="hand2", activebackground="#c0392b").pack(pady=20)
 
 if __name__ == "__main__":
     root = tk.Tk()
     app = QuizApp(root)
     root.mainloop()
+
