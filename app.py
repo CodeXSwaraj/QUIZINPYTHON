@@ -2,12 +2,14 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import requests
 import html
+import random
 
 class QuizApp:
     def __init__(self, master):
         self.master = master
         self.master.title("Quiz App")
-        self.master.geometry("600x400")
+        self.master.geometry("600x450")
+        self.master.config(bg="#2c3e50")
         self.master.resizable(False, False)
         
         self.score = 0
@@ -32,7 +34,7 @@ class QuizApp:
             messagebox.showerror("Error", f"An error occurred while fetching categories: {e}")
     
     def create_category_widgets(self):
-        self.category_label = tk.Label(self.master, text="Select a Category", font=('Arial', 16))
+        self.category_label = tk.Label(self.master, text="Select a Category", font=('Arial', 16, 'bold'), fg="#ecf0f1", bg="#2c3e50")
         self.category_label.pack(pady=20)
         
         self.category_var = tk.StringVar()
@@ -41,7 +43,7 @@ class QuizApp:
         self.category_dropdown.current(0)  # set the selected item
         self.category_dropdown.pack(pady=10)
         
-        self.start_button = tk.Button(self.master, text="Start Quiz", command=self.start_quiz, font=('Arial', 14), bg="#4caf50", fg="white")
+        self.start_button = tk.Button(self.master, text="Start Quiz", command=self.start_quiz, font=('Arial', 14, 'bold'), bg="#27ae60", fg="white", cursor="hand2", activebackground="#2ecc71")
         self.start_button.pack(pady=20)
     
     def start_quiz(self):
@@ -63,12 +65,9 @@ class QuizApp:
                         "options": [html.unescape(opt) for opt in item["incorrect_answers"]] + [html.unescape(item["correct_answer"])],
                         "answer": html.unescape(item["correct_answer"])
                     }
-                    # Shuffle the options to randomize their order
-                    import random
                     random.shuffle(question["options"])
                     self.questions.append(question)
                 
-                # Remove category selection widgets and start quiz
                 self.category_label.pack_forget()
                 self.category_dropdown.pack_forget()
                 self.start_button.pack_forget()
@@ -80,28 +79,23 @@ class QuizApp:
             messagebox.showerror("Error", f"An error occurred while fetching questions: {e}")
     
     def create_widgets(self):
-        # Question label
-        self.question_label = tk.Label(self.master, text="", font=('Arial', 16, 'bold'), wraplength=500, justify="center", bg="#f0f0f0")
+        self.question_label = tk.Label(self.master, text="", font=('Arial', 16, 'bold'), wraplength=500, justify="center", bg="#34495e", fg="#ecf0f1", bd=10, relief="groove")
         self.question_label.pack(pady=20)
         
-        # Timer label
-        self.timer_label = tk.Label(self.master, text=f"Time left: {self.time_left} seconds", font=('Arial', 12), bg="#f0f0f0")
+        self.timer_label = tk.Label(self.master, text=f"Time left: {self.time_left} seconds", font=('Arial', 12, 'bold'), bg="#34495e", fg="#ecf0f1")
         self.timer_label.pack(pady=10)
         
-        # Options (Radio buttons)
         self.var = tk.StringVar()
         self.option_buttons = []
         for _ in range(4):
-            btn = tk.Radiobutton(self.master, text="", variable=self.var, value="", font=('Arial', 14), anchor='w', padx=10, bg="#e1e1e1")
+            btn = tk.Radiobutton(self.master, text="", variable=self.var, value="", font=('Arial', 14), anchor='w', padx=10, bg="#34495e", fg="#ecf0f1", activebackground="#1abc9c", activeforeground="white", cursor="hand2")
             btn.pack(fill='x', padx=20, pady=5)
             self.option_buttons.append(btn)
         
-        # Submit button
-        self.submit_button = tk.Button(self.master, text="Submit", command=self.submit_answer, font=('Arial', 14), bg="#4caf50", fg="white")
+        self.submit_button = tk.Button(self.master, text="Submit", command=self.submit_answer, font=('Arial', 14, 'bold'), bg="#e74c3c", fg="white", cursor="hand2", activebackground="#c0392b")
         self.submit_button.pack(pady=20)
         
-        # Progress label
-        self.progress_label = tk.Label(self.master, text=f"Question 1/{len(self.questions)}", font=('Arial', 12), bg="#f0f0f0")
+        self.progress_label = tk.Label(self.master, text=f"Question 1/{len(self.questions)}", font=('Arial', 12, 'bold'), bg="#34495e", fg="#ecf0f1")
         self.progress_label.pack(side='bottom', pady=10)
 
     def display_question(self):
@@ -114,7 +108,7 @@ class QuizApp:
         question_data = self.questions[self.question_index]
         self.question_label.config(text=question_data["question"])
         for i, option in enumerate(question_data["options"]):
-            self.option_buttons[i].config(text=option, value=option, bg="#e1e1e1")
+            self.option_buttons[i].config(text=option, value=option, bg="#34495e")
         self.var.set(None)
         self.update_progress()
     
@@ -140,16 +134,20 @@ class QuizApp:
                 correct_answer = self.questions[self.question_index]["answer"]
                 if selected_option == correct_answer:
                     self.score += 1
-                    messagebox.showinfo("Correct!", "That's the correct answer!", icon='info')
-                    self.question_label.config(bg="#dff0d8")
+                    self.question_label.config(bg="#27ae60")
+                    messagebox.showinfo("Correct!", "That's the correct answer!")
                 else:
+                    self.question_label.config(bg="#e74c3c")
                     messagebox.showerror("Incorrect", f"Wrong answer. The correct answer was {correct_answer}.")
-                    self.question_label.config(bg="#f8d7da")
             else:
                 messagebox.showwarning("Warning", "Please select an option.")
         
+        self.master.after(1000, self.next_question)
+
+    def next_question(self):
         self.question_index += 1
         if self.question_index < len(self.questions):
+            self.question_label.config(bg="#34495e")
             self.display_question()
         else:
             self.show_results()
