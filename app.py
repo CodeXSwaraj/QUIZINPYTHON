@@ -88,7 +88,7 @@ class QuizApp:
         self.var = tk.StringVar()
         self.option_buttons = []
         for _ in range(4):
-            btn = tk.Radiobutton(self.master, text="", variable=self.var, value="", font=('Arial', 14), anchor='w', padx=10, bg="#34495e", fg="#ecf0f1", activebackground="#34495e", activeforeground="#1abc9c", cursor="hand2")
+            btn = tk.Radiobutton(self.master, text="", variable=self.var, value="", font=('Arial', 14), anchor='w', padx=10, bg="#34495e", fg="#ecf0f1", selectcolor="#1abc9c", activebackground="#34495e", activeforeground="#1abc9c", cursor="hand2")
             btn.pack(fill='x', padx=20, pady=5)
             self.option_buttons.append(btn)
         
