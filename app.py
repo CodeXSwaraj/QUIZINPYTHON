@@ -88,7 +88,7 @@ class QuizApp:
         self.var = tk.StringVar()
         self.option_buttons = []
         for _ in range(4):
-            btn = tk.Radiobutton(self.master, text="", variable=self.var, value="", font=('Arial', 14), anchor='w', padx=10, bg="#34495e", fg="#ecf0f1", activebackground="#1abc9c", activeforeground="white", cursor="hand2")
+            btn = tk.Radiobutton(self.master, text="", variable=self.var, value="", font=('Arial', 14), anchor='w', padx=10, bg="#34495e", fg="#ecf0f1", activebackground="#34495e", activeforeground="#1abc9c", cursor="hand2")
             btn.pack(fill='x', padx=20, pady=5)
             self.option_buttons.append(btn)
         
@@ -106,9 +106,9 @@ class QuizApp:
         self.update_timer()
         
         question_data = self.questions[self.question_index]
-        self.question_label.config(text=question_data["question"])
+        self.question_label.config(text=question_data["question"], bg="#34495e")
         for i, option in enumerate(question_data["options"]):
-            self.option_buttons[i].config(text=option, value=option, bg="#34495e")
+            self.option_buttons[i].config(text=option, value=option, bg="#34495e", state=tk.NORMAL)
         self.var.set(None)
         self.update_progress()
     
@@ -147,7 +147,6 @@ class QuizApp:
     def next_question(self):
         self.question_index += 1
         if self.question_index < len(self.questions):
-            self.question_label.config(bg="#34495e")
             self.display_question()
         else:
             self.show_results()
