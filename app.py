@@ -82,7 +82,8 @@ class QuizApp:
             messagebox.showerror("Error", f"An error occurred while fetching questions: {e}")
     
     def load_india_questions(self):
-        self.questions = [
+        # Pool of India-specific questions
+        india_questions = [
             {
                 "question": "What is the capital of India?",
                 "options": ["New Delhi", "Mumbai", "Kolkata", "Chennai"],
@@ -107,8 +108,35 @@ class QuizApp:
                 "question": "In which year did India gain independence?",
                 "options": ["1947", "1950", "1945", "1935"],
                 "answer": "1947"
+            },
+            {
+                "question": "What is the national animal of India?",
+                "options": ["Lion", "Tiger", "Elephant", "Peacock"],
+                "answer": "Tiger"
+            },
+            {
+                "question": "Which is the largest state of India by area?",
+                "options": ["Uttar Pradesh", "Madhya Pradesh", "Rajasthan", "Maharashtra"],
+                "answer": "Rajasthan"
+            },
+            {
+                "question": "Who was the first Prime Minister of India?",
+                "options": ["Mahatma Gandhi", "Jawaharlal Nehru", "Indira Gandhi", "Rajendra Prasad"],
+                "answer": "Jawaharlal Nehru"
+            },
+            {
+                "question": "Which river is known as the Ganga of the South?",
+                "options": ["Godavari", "Krishna", "Cauvery", "Yamuna"],
+                "answer": "Cauvery"
+            },
+            {
+                "question": "Which Indian state is known as the 'Spice Garden of India'?",
+                "options": ["Kerala", "Assam", "Tamil Nadu", "Karnataka"],
+                "answer": "Kerala"
             }
         ]
+        
+        self.questions = random.sample(india_questions, 5)  # Select a random subset of questions
         self.category_label.pack_forget()
         self.category_dropdown.pack_forget()
         self.start_button.pack_forget()
@@ -155,44 +183,28 @@ class QuizApp:
             self.time_left -= 1
             self.timer = self.master.after(1000, self.update_timer)
         else:
-            self.submit_answer(timer_expired=True)
-
+            self.submit_answer(auto_submit=True)
+    
     def update_progress(self):
-        current_question = self.question_index + 1
-        total_questions = len(self.questions)
-        self.progress_label.config(text=f"Question {current_question}/{total_questions}")
-
-    def submit_answer(self, timer_expired=False):
+        self.progress_label.config(text=f"Question {self.question_index + 1}/{len(self.questions)}")
+    
+    def submit_answer(self, auto_submit=False):
         selected_option = self.var.get()
-        if timer_expired:
-            messagebox.showinfo("Time's up!", "Time ran out for this question.")
-        else:
-            if selected_option:
-                correct_answer = self.questions[self.question_index]["answer"]
-                if selected_option == correct_answer:
-                    self.score += 1
-                    self.question_label.config(bg="#27ae60")
-                    messagebox.showinfo("Correct!", "That's the correct answer!")
-                else:
-                    self.question_label.config(bg="#e74c3c")
-                    messagebox.showerror("Incorrect", f"Wrong answer. The correct answer was {correct_answer}.")
+        if selected_option or auto_submit:
+            correct_answer = self.questions[self.question_index]["answer"]
+            if selected_option == correct_answer:
+                self.score += 1
+            
+            self.question_index += 1
+            if self.question_index < len(self.questions):
+                self.display_question()
             else:
-                messagebox.showwarning("Warning", "Please select an option.")
-        
-        self.master.after(1000, self.next_question)
-
-    def next_question(self):
-        self.question_index += 1
-        if self.question_index < len(self.questions):
-            self.display_question()
+                if self.timer:
+                    self.master.after_cancel(self.timer)
+                messagebox.showinfo("Quiz Completed", f"Your score is {self.score}/{len(self.questions)}")
+                self.master.quit()
         else:
-            self.show_results()
-
-    def show_results(self):
-        if self.timer:
-            self.master.after_cancel(self.timer)
-        messagebox.showinfo("Quiz Completed", f"Your score is {self.score}/{len(self.questions)}")
-        self.master.quit()
+            messagebox.showwarning("Warning", "Please select an option.")
 
 if __name__ == "__main__":
     root = tk.Tk()
