@@ -15,11 +15,11 @@ class QuizApp:
         self.score = 0
         self.question_index = 0
         self.questions = []
-        self.categories = []
+        self.categories = [{'id': 999, 'name': 'India'}]  # Adding custom India category
         self.time_left = 15  # seconds for each question
         self.timer = None
 
-        # Fetch categories from API
+        # Fetch categories from API and add custom category
         self.fetch_categories()
         
         # Creating widgets for category selection
@@ -29,7 +29,7 @@ class QuizApp:
         try:
             response = requests.get("https://opentdb.com/api_category.php")
             data = response.json()
-            self.categories = data["trivia_categories"]
+            self.categories.extend(data["trivia_categories"])  # Append existing categories
         except Exception as e:
             messagebox.showerror("Error", f"An error occurred while fetching categories: {e}")
     
@@ -48,11 +48,14 @@ class QuizApp:
     
     def start_quiz(self):
         selected_category = self.category_var.get()
-        category_id = next((cat['id'] for cat in self.categories if cat['name'] == selected_category), None)
-        if category_id:
-            self.fetch_questions(category_id)
+        if selected_category == 'India':
+            self.load_india_questions()
         else:
-            messagebox.showerror("Error", "Invalid category selected.")
+            category_id = next((cat['id'] for cat in self.categories if cat['name'] == selected_category), None)
+            if category_id:
+                self.fetch_questions(category_id)
+            else:
+                messagebox.showerror("Error", "Invalid category selected.")
     
     def fetch_questions(self, category_id):
         try:
@@ -77,6 +80,40 @@ class QuizApp:
                 messagebox.showerror("Error", "Could not fetch questions. Please try again.")
         except Exception as e:
             messagebox.showerror("Error", f"An error occurred while fetching questions: {e}")
+    
+    def load_india_questions(self):
+        self.questions = [
+            {
+                "question": "What is the capital of India?",
+                "options": ["New Delhi", "Mumbai", "Kolkata", "Chennai"],
+                "answer": "New Delhi"
+            },
+            {
+                "question": "Who is known as the Father of the Indian Nation?",
+                "options": ["Jawaharlal Nehru", "Mahatma Gandhi", "Sardar Patel", "Subhas Chandra Bose"],
+                "answer": "Mahatma Gandhi"
+            },
+            {
+                "question": "Which Indian state has the longest coastline?",
+                "options": ["Gujarat", "Tamil Nadu", "Maharashtra", "Andhra Pradesh"],
+                "answer": "Gujarat"
+            },
+            {
+                "question": "Who wrote the Indian national anthem?",
+                "options": ["Rabindranath Tagore", "Bankim Chandra Chatterjee", "Sarojini Naidu", "Mahatma Gandhi"],
+                "answer": "Rabindranath Tagore"
+            },
+            {
+                "question": "In which year did India gain independence?",
+                "options": ["1947", "1950", "1945", "1935"],
+                "answer": "1947"
+            }
+        ]
+        self.category_label.pack_forget()
+        self.category_dropdown.pack_forget()
+        self.start_button.pack_forget()
+        self.create_widgets()
+        self.display_question()
     
     def create_widgets(self):
         self.question_label = tk.Label(self.master, text="", font=('Arial', 16, 'bold'), wraplength=500, justify="center", bg="#34495e", fg="#ecf0f1", bd=10, relief="groove")
